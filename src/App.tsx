@@ -15,6 +15,7 @@ import FormGroup from '@mui/material/FormGroup';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 import { Paper } from "@mui/material";
+import { Generate } from '@jsonforms/core';
 
 const useStyles = makeStyles({
   container: {
@@ -70,6 +71,16 @@ const App = () => {
   const schemaMonaco = useRef<any>(null)
   const uischemaMonaco = useRef<any>(null)
 
+  const generateFromData = () => {
+    let json = JSON.stringify(Generate.jsonSchema(JSON.parse(stringifiedData)), null, 2);
+    schemaMonaco.current.setValue(json)
+  }
+
+  const generateFromSchema = () => {
+    let json = JSON.stringify(Generate.uiSchema(JSON.parse(schemaMonaco.current.getValue())), null, 2);
+    uischemaMonaco.current.setValue(json)
+  }
+
   const renderForm = () => {
     // @ts-ignore
     setSchema(JSON.parse(schemaMonaco.current.getValue()))
@@ -93,9 +104,19 @@ const App = () => {
         className={classes.container}
       >
         <Grid item sm={6}>
-          <Typography variant={'h5'} className={classes.title}>
-            JSON Schema
-          </Typography>
+          <div style={{ display: 'flex', padding: '1rem' }}>
+            <Typography variant={'h5'} className={classes.title}>
+              JSON Schema
+            </Typography>
+            <Button
+              className={classes.resetButton}
+              onClick={generateFromData}
+              color='primary'
+              variant='contained'
+            >
+              Generate From Data
+            </Button>
+          </div>
           <div style={{ width: "600px", height: "400px" }}>
             <MonacoEditor
               language="json"
@@ -103,9 +124,21 @@ const App = () => {
               onMount={editor => schemaMonaco.current = editor}
             />
           </div>
-          <Typography variant={'h5'} className={classes.title}>
-            UI Schema
-          </Typography>
+
+          <div style={{ display: 'flex', padding: '1rem' }}>
+            <Typography variant={'h5'} className={classes.title}>
+              UI Schema
+            </Typography>
+            <Button
+              className={classes.resetButton}
+              onClick={generateFromSchema}
+              color='primary'
+              variant='contained'
+            >
+              Generate From Schema
+            </Button>
+          </div>
+
           <div style={{ width: "600px", height: "400px" }}>
             <MonacoEditor
               language="json"
@@ -123,7 +156,7 @@ const App = () => {
               color='primary'
               variant='contained'
             >
-              Render form
+              Render
             </Button>
             <FormGroup>
               <FormControlLabel control={
