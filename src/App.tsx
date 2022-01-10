@@ -14,8 +14,11 @@ import MonacoEditor from "@monaco-editor/react";
 import FormGroup from '@mui/material/FormGroup';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
-import { Paper } from "@mui/material";
+import { Paper, Stack } from "@mui/material";
 import { Generate } from '@jsonforms/core';
+
+const initSchemaJSON = JSON.stringify(initSchema, null, 2);
+const initUISchemaJSON = JSON.stringify(initUISchema, null, 2);
 
 const useStyles = makeStyles({
   container: {
@@ -70,137 +73,110 @@ const App = () => {
 
   const schemaMonaco = useRef<any>(null)
   const uischemaMonaco = useRef<any>(null)
+  const dataMonaco = useRef<any>(null)
 
   const generateFromData = () => {
-    let json = JSON.stringify(Generate.jsonSchema(JSON.parse(stringifiedData)), null, 2);
+    const json = JSON.stringify(Generate.jsonSchema(JSON.parse(dataMonaco.current.getValue())), null, 2);
     schemaMonaco.current.setValue(json)
   }
 
   const generateFromSchema = () => {
-    let json = JSON.stringify(Generate.uiSchema(JSON.parse(schemaMonaco.current.getValue())), null, 2);
+    const json = JSON.stringify(Generate.uiSchema(JSON.parse(schemaMonaco.current.getValue())), null, 2);
     uischemaMonaco.current.setValue(json)
   }
 
   const renderForm = () => {
-    // @ts-ignore
     setSchema(JSON.parse(schemaMonaco.current.getValue()))
-    // @ts-ignore
     setUISchema(JSON.parse(uischemaMonaco.current.getValue()))
+    setData(JSON.parse(dataMonaco.current.getValue()))
   }
 
   const [viewOnly, setViewOnly] = useState<boolean>(false)
 
   // @ts-ignore
-  const handleChange = (event) => {
+  const handleViewOnlyChange = (event) => {
     setViewOnly(event.target.checked);
   };
 
+  const monacoOptions = {
+    formatOnPaste: true,
+  };
+
+  // @ts-ignore
+  const Title = (props) => (
+    <Typography variant={'h5'} className={classes.title}>
+      {props.children}
+    </Typography>
+  )
+
   return (
     <Fragment>
-      <Grid
-        container
-        justifyContent={'center'}
-        spacing={1}
-        className={classes.container}
-      >
+      <Grid container justifyContent={'center'} spacing={1} className={classes.container}>
         <Grid item sm={6}>
-          <div style={{ display: 'flex', padding: '1rem' }}>
-            <Typography variant={'h5'} className={classes.title}>
-              JSON Schema
-            </Typography>
-            <Button
-              className={classes.resetButton}
-              onClick={generateFromData}
-              color='primary'
-              variant='contained'
-            >
-              Generate From Data
-            </Button>
-          </div>
+          <Stack direction='row' spacing={2}>
+            <Title>JSON Schema</Title>
+            <Button onClick={generateFromData}>Generate From Data</Button>
+          </Stack>
           <div style={{ width: "600px", height: "400px" }}>
             <MonacoEditor
               language="json"
-              defaultValue={useMemo(() => JSON.stringify(initSchema, null, 2), [initSchema])}
+              options={monacoOptions}
+              defaultValue={initSchemaJSON}
               onMount={editor => schemaMonaco.current = editor}
             />
           </div>
 
-          <div style={{ display: 'flex', padding: '1rem' }}>
-            <Typography variant={'h5'} className={classes.title}>
-              UI Schema
-            </Typography>
-            <Button
-              className={classes.resetButton}
-              onClick={generateFromSchema}
-              color='primary'
-              variant='contained'
-            >
-              Generate From Schema
-            </Button>
-          </div>
-
+          <Stack direction='row' spacing={2}>
+            <Title>UI Schema</Title>
+            <Button onClick={generateFromSchema}>Generate From Schema</Button>
+          </Stack>
           <div style={{ width: "600px", height: "400px" }}>
             <MonacoEditor
               language="json"
-              defaultValue={useMemo(() => JSON.stringify(initUISchema, null, 2), [initUISchema])}
+              options={monacoOptions}
+              defaultValue={initUISchemaJSON}
               onMount={editor => uischemaMonaco.current = editor}
             />
           </div>
         </Grid>
 
         <Grid item sm={6}>
-          <div style={{ display: 'flex', padding: '1rem' }}>
-            <Button
-              className={classes.resetButton}
-              onClick={renderForm}
-              color='primary'
-              variant='contained'
-            >
-              Render
-            </Button>
+          <Stack direction='row' spacing={2}>
+            <Title>Form</Title>
+            <Button onClick={renderForm}>Render</Button>
             <FormGroup>
-              <FormControlLabel control={
-                <Checkbox checked={viewOnly} onClick={handleChange}/>
-              } label="ViewOnly"/>
+              <FormControlLabel
+                control={<Checkbox checked={viewOnly} onClick={handleViewOnlyChange}/>}
+                label="ViewOnly"
+              />
             </FormGroup>
-          </div>
-
+          </Stack>
           <Paper variant="outlined">
             <div className={classes.demoform}>
-            <JsonForms
-              schema={schema}
-              uischema={uischema}
-              data={data}
-              renderers={renderers}
-              cells={materialCells}
-              onChange={({ errors, data }) => setData(data)}
-              readonly={viewOnly}
-            />
+              <JsonForms
+                schema={schema}
+                uischema={uischema}
+                data={data}
+                renderers={renderers}
+                cells={materialCells}
+                onChange={({ errors, data }) => setData(data)}
+                readonly={viewOnly}
+              />
             </div>
           </Paper>
 
-          <Typography variant={'h5'} className={classes.title}>
-            Bound data
-          </Typography>
+          <Stack direction='row' spacing={2}>
+            <Title>Bound data</Title>
+            <Button onClick={clearData}>Clear data</Button>
+          </Stack>
           <div style={{ width: "600px", height: "300px" }}>
             <MonacoEditor
               language="json"
+              options={monacoOptions}
               value={stringifiedData}
-              options={{
-                readOnly: true,
-                minimap: { enabled: false },
-                lineNumbers: "off"
-              }}
+              onMount={editor => dataMonaco.current = editor}
             />
           </div>
-          <Button
-            className={classes.resetButton}
-            onClick={clearData}
-            color='primary'
-            variant='contained'
-          >
-            Clear data
-          </Button>
         </Grid>
       </Grid>
     </Fragment>
